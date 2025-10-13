@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>B-tier Bonuses</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at top, #1b1b1b, #111);
+      color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 40px;
+      margin: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 1em;
+      color: #4caf50;
+    }
+
+    .tier-list {
+      width: 100%;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .tier-item {
+      margin: 15px 0;
+      padding: 15px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+    }
+
+    button {
+      margin-top: 30px;
+      background: #4caf50;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #45a049;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <h1>B-tier Bonuses Overview 🌌</h1>
+
+  <div class="tier-list">
+    <div class="tier-item"><strong>B-tier 1:</strong> ×3 click multiplier boost.</div>
+    <div class="tier-item"><strong>B-tier 2:</strong> Unlocks Upgrade 2 (adds flat +10 A per click).</div>
+    <div class="tier-item"><strong>B-tier 3:</strong> Unlocks Upgrade 3 (+1 Auto A/sec, unaffected by click multipliers).</div>
+    <div class="tier-item"><strong>B-tier 4:</strong> Auto A gains ×3.5 multiplier per B-tier.</div>
+    <div class="tier-item"><strong>B-tier 5+:</strong> Multiplies Auto A further (scaling continues exponentially).</div>
+  </div>
+
+  <button onclick="window.location.href='index.html'">⬅️ Back to Game</button>
+</body>
+</html>

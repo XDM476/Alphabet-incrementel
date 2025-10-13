@@ -38,6 +38,8 @@
       cursor: pointer;
       transition: all 0.2s;
       margin: 5px;
+      opacity: 1;
+      visibility: visible;
     }
 
     button:hover {
@@ -50,6 +52,10 @@
       cursor: not-allowed;
       transform: none;
     }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -60,14 +66,17 @@
     <p>Auto A: <span id="auto">0</span></p>
     <p>Next Upgrade 1 Cost: <span id="cost1">10</span></p>
     <p>Next Upgrade 2 Cost: <span id="cost2">1000</span></p>
+    <p>Next Upgrade 3 Cost: <span id="cost3">5000</span></p>
     <p>B-tier Resets: <span id="bTier">0</span></p>
-    <p>Next B-tier at: <span id="bNext">1000</span></p>
+    <p>Next B-tier at: <span id="bNext">500</span></p>
   </div>
 
   <button id="clickBtn">Click to Earn A</button>
   <button id="upgrade1Btn">Upgrade 1 (×A gain)</button>
-  <button id="upgrade2Btn" disabled>Upgrade 2 (Extra A per click)</button>
+  <button id="upgrade2Btn" class="hidden">Upgrade 2 (Extra A per click)</button>
+  <button id="upgrade3Btn" class="hidden">Upgrade 3 (+1 Auto A/sec)</button>
   <button id="bResetBtn">Reset for B-tier</button>
+  <button id="bInfoBtn">View B-tier Info</button>
   <button id="quitBtn">Quit Game</button>
 
   <script>
@@ -75,43 +84,65 @@
     let autoPoints = 0;
     let clickMultiplier = 1;
 
-    let upgrade1Cost = 10;   // Multiplier upgrade
-    let upgrade2Cost = 1000; // Extra flat A per click (unlocks B-tier 2)
+    let upgrade1Cost = 10;
+    let upgrade2Cost = 1000;
+    let upgrade3Cost = 5000;
+
     let upgrade2Bonus = 0;
+    let upgrade3Count = 0;
 
     let bTier = 0;
-    let nextBThreshold = 1000;
+    let nextBThreshold = 500;
 
     const pointsEl = document.getElementById("points");
     const autoEl = document.getElementById("auto");
     const clickMultEl = document.getElementById("clickMult");
     const cost1El = document.getElementById("cost1");
     const cost2El = document.getElementById("cost2");
+    const cost3El = document.getElementById("cost3");
     const bTierEl = document.getElementById("bTier");
     const bNextEl = document.getElementById("bNext");
 
     const clickBtn = document.getElementById("clickBtn");
     const upgrade1Btn = document.getElementById("upgrade1Btn");
     const upgrade2Btn = document.getElementById("upgrade2Btn");
+    const upgrade3Btn = document.getElementById("upgrade3Btn");
     const bResetBtn = document.getElementById("bResetBtn");
     const quitBtn = document.getElementById("quitBtn");
+    const bInfoBtn = document.getElementById("bInfoBtn");
 
     function updateUI() {
-      pointsEl.textContent = points;
-      autoEl.textContent = autoPoints;
+      pointsEl.textContent = Math.floor(points);
+      autoEl.textContent = Math.floor(autoPoints);
       clickMultEl.textContent = clickMultiplier;
       cost1El.textContent = upgrade1Cost;
       cost2El.textContent = upgrade2Cost;
+      cost3El.textContent = upgrade3Cost;
       bTierEl.textContent = bTier;
       bNextEl.textContent = nextBThreshold;
 
+      // Hide or show upgrades depending on B-tier unlocks
+      if (bTier >= 2) {
+        upgrade2Btn.classList.remove("hidden");
+      } else {
+        upgrade2Btn.classList.add("hidden");
+      }
+
+      if (bTier >= 3) {
+        upgrade3Btn.classList.remove("hidden");
+      } else {
+        upgrade3Btn.classList.add("hidden");
+      }
+
+      // Disable buttons if not enough A
       upgrade1Btn.disabled = points < upgrade1Cost;
-      upgrade2Btn.disabled = points < upgrade2Cost || bTier < 2;
+      upgrade2Btn.disabled = points < upgrade2Cost;
+      upgrade3Btn.disabled = points < upgrade3Cost;
       bResetBtn.disabled = points < nextBThreshold;
     }
 
     clickBtn.addEventListener("click", () => {
-      let gain = clickMultiplier + upgrade2Bonus;
+      let gain = (clickMultiplier + upgrade2Bonus);
       points += gain;
       updateUI();
     });
@@ -119,8 +150,8 @@
     upgrade1Btn.addEventListener("click", () => {
       if (points >= upgrade1Cost) {
         points -= upgrade1Cost;
-        clickMultiplier *= 2; // Multiply A gain per click
-        upgrade1Cost *= 5; // Harsher scaling
+        clickMultiplier *= 2;
+        upgrade1Cost *= 5;
         updateUI();
       }
     });
@@ -128,22 +159,43 @@
     upgrade2Btn.addEventListener("click", () => {
       if (points >= upgrade2Cost && bTier >= 2) {
         points -= upgrade2Cost;
-        upgrade2Bonus += 10; // Extra flat A per click
+        upgrade2Bonus += 10;
         upgrade2Cost *= 10;
+        updateUI();
+      }
+    });
+
+    upgrade3Btn.addEventListener("click", () => {
+      if (points >= upgrade3Cost && bTier >= 3) {
+        points -= upgrade3Cost;
+        upgrade3Count++;
+        autoPoints += 1;
+        upgrade3Cost *= 10;
         updateUI();
       }
     });
 
     bResetBtn.addEventListener("click", () => {
       if (points >= nextBThreshold) {
+        bTier++;
         points = 0;
-        autoPoints = 0;
-        clickMultiplier = Math.pow(2, bTier + 1); // Multiply gain by 2^bTier
+        clickMultiplier = Math.pow(3, bTier);
         upgrade1Cost = 10;
         upgrade2Cost = 1000;
+        upgrade3Cost = 5000;
         upgrade2Bonus = 0;
-        bTier++;
-        nextBThreshold = Math.pow(1000, bTier + 1);
+        upgrade3Count = 0;
+
+        autoPoints = 0;
+        if (bTier >= 3) {
+          autoPoints += bTier - 2;
+        }
+
+        if (bTier >= 4) {
+          autoPoints *= Math.pow(3.5, bTier - 3);
+        }
+
+        nextBThreshold = 500 * Math.pow(5, bTier);
         updateUI();
         alert(`🎉 B-tier reset complete! You are now at B-tier ${bTier}`);
       }
@@ -156,13 +208,19 @@
       clickMultiplier = 1;
       upgrade1Cost = 10;
       upgrade2Cost = 1000;
+      upgrade3Cost = 5000;
       upgrade2Bonus = 0;
+      upgrade3Count = 0;
       bTier = 0;
-      nextBThreshold = 1000;
+      nextBThreshold = 500;
       updateUI();
     });
 
-    // Auto increment loop (still can add autoPoints later)
+    // Go to B-tier info page
+    bInfoBtn.addEventListener("click", () => {
+      window.location.href = "btier.html";
+    });
+
     setInterval(() => {
       points += autoPoints;
       updateUI();
