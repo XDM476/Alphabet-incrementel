@@ -1,2 +1,2 @@
-# Alphabet-incrementel
+# Alphabet-incremental
 an icremental with letters
