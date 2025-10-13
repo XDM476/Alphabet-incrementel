@@ -50,78 +50,119 @@
       cursor: not-allowed;
       transform: none;
     }
-
-    .secret {
-      margin-top: 20px;
-      color: #888;
-      font-size: 0.9em;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
   <h1>Mini Incremental Game 💎</h1>
   <div class="stats">
-    <p>Points: <span id="points">0</span></p>
-    <p>Auto Points: <span id="auto">0</span></p>
-    <p>Next Upgrade Cost: <span id="cost">10</span></p>
+    <p>A: <span id="points">0</span></p>
+    <p>Click Multiplier: <span id="clickMult">1</span>x</p>
+    <p>Auto A: <span id="auto">0</span></p>
+    <p>Next Upgrade 1 Cost: <span id="cost1">10</span></p>
+    <p>Next Upgrade 2 Cost: <span id="cost2">1000</span></p>
+    <p>B-tier Resets: <span id="bTier">0</span></p>
+    <p>Next B-tier at: <span id="bNext">1000</span></p>
   </div>
 
-  <button id="clickBtn">Click to Earn Points</button>
-  <button id="upgradeBtn">Buy Upgrade</button>
+  <button id="clickBtn">Click to Earn A</button>
+  <button id="upgrade1Btn">Upgrade 1 (×A gain)</button>
+  <button id="upgrade2Btn" disabled>Upgrade 2 (Extra A per click)</button>
+  <button id="bResetBtn">Reset for B-tier</button>
   <button id="quitBtn">Quit Game</button>
-
-  <div class="secret" id="secret">Psst... click me 👀</div>
 
   <script>
     let points = 0;
-    let upgradeCost = 10;
     let autoPoints = 0;
+    let clickMultiplier = 1;
+
+    let upgrade1Cost = 10;   // Multiplier upgrade
+    let upgrade2Cost = 1000; // Extra flat A per click (unlocks B-tier 2)
+    let upgrade2Bonus = 0;
+
+    let bTier = 0;
+    let nextBThreshold = 1000;
 
     const pointsEl = document.getElementById("points");
     const autoEl = document.getElementById("auto");
-    const costEl = document.getElementById("cost");
+    const clickMultEl = document.getElementById("clickMult");
+    const cost1El = document.getElementById("cost1");
+    const cost2El = document.getElementById("cost2");
+    const bTierEl = document.getElementById("bTier");
+    const bNextEl = document.getElementById("bNext");
+
     const clickBtn = document.getElementById("clickBtn");
-    const upgradeBtn = document.getElementById("upgradeBtn");
+    const upgrade1Btn = document.getElementById("upgrade1Btn");
+    const upgrade2Btn = document.getElementById("upgrade2Btn");
+    const bResetBtn = document.getElementById("bResetBtn");
     const quitBtn = document.getElementById("quitBtn");
-    const secret = document.getElementById("secret");
 
     function updateUI() {
       pointsEl.textContent = points;
       autoEl.textContent = autoPoints;
-      costEl.textContent = upgradeCost;
-      upgradeBtn.disabled = points < upgradeCost;
+      clickMultEl.textContent = clickMultiplier;
+      cost1El.textContent = upgrade1Cost;
+      cost2El.textContent = upgrade2Cost;
+      bTierEl.textContent = bTier;
+      bNextEl.textContent = nextBThreshold;
+
+      upgrade1Btn.disabled = points < upgrade1Cost;
+      upgrade2Btn.disabled = points < upgrade2Cost || bTier < 2;
+      bResetBtn.disabled = points < nextBThreshold;
     }
 
     clickBtn.addEventListener("click", () => {
-      points += 1 + autoPoints;
+      let gain = clickMultiplier + upgrade2Bonus;
+      points += gain;
       updateUI();
     });
 
-    upgradeBtn.addEventListener("click", () => {
-      if (points >= upgradeCost) {
-        points -= upgradeCost;
-        autoPoints++;
-        upgradeCost *= 2;
+    upgrade1Btn.addEventListener("click", () => {
+      if (points >= upgrade1Cost) {
+        points -= upgrade1Cost;
+        clickMultiplier *= 2; // Multiply A gain per click
+        upgrade1Cost *= 5; // Harsher scaling
         updateUI();
       }
     });
 
+    upgrade2Btn.addEventListener("click", () => {
+      if (points >= upgrade2Cost && bTier >= 2) {
+        points -= upgrade2Cost;
+        upgrade2Bonus += 10; // Extra flat A per click
+        upgrade2Cost *= 10;
+        updateUI();
+      }
+    });
+
+    bResetBtn.addEventListener("click", () => {
+      if (points >= nextBThreshold) {
+        points = 0;
+        autoPoints = 0;
+        clickMultiplier = Math.pow(2, bTier + 1); // Multiply gain by 2^bTier
+        upgrade1Cost = 10;
+        upgrade2Cost = 1000;
+        upgrade2Bonus = 0;
+        bTier++;
+        nextBThreshold = Math.pow(1000, bTier + 1);
+        updateUI();
+        alert(`🎉 B-tier reset complete! You are now at B-tier ${bTier}`);
+      }
+    });
+
     quitBtn.addEventListener("click", () => {
-      alert(`Game over! Final score: ${points} points`);
+      alert(`Game over! Final A: ${points}, B-tier resets: ${bTier}`);
       points = 0;
-      upgradeCost = 10;
       autoPoints = 0;
+      clickMultiplier = 1;
+      upgrade1Cost = 10;
+      upgrade2Cost = 1000;
+      upgrade2Bonus = 0;
+      bTier = 0;
+      nextBThreshold = 1000;
       updateUI();
     });
 
-    secret.addEventListener("click", () => {
-      points += 100000000000;
-      alert("💰 You found the secret millionaire cheat!");
-      updateUI();
-    });
-
-    // Auto increment loop (simulating “auto points”)
+    // Auto increment loop (still can add autoPoints later)
     setInterval(() => {
       points += autoPoints;
       updateUI();
@@ -131,3 +172,4 @@
   </script>
 </body>
 </html>
+
