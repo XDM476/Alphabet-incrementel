@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Incremental Game</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at top, #282c34, #1b1b1b);
+      color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 0.5em;
+    }
+
+    .stats {
+      margin: 1em 0;
+      font-size: 1.2em;
+    }
+
+    button {
+      background: #4caf50;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: #45a049;
+      transform: scale(1.05);
+    }
+
+    button:disabled {
+      background: #777;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .secret {
+      margin-top: 20px;
+      color: #888;
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini Incremental Game 💎</h1>
+  <div class="stats">
+    <p>Points: <span id="points">0</span></p>
+    <p>Auto Points: <span id="auto">0</span></p>
+    <p>Next Upgrade Cost: <span id="cost">10</span></p>
+  </div>
+
+  <button id="clickBtn">Click to Earn Points</button>
+  <button id="upgradeBtn">Buy Upgrade</button>
+  <button id="quitBtn">Quit Game</button>
+
+  <div class="secret" id="secret">Psst... click me 👀</div>
+
+  <script>
+    let points = 0;
+    let upgradeCost = 10;
+    let autoPoints = 0;
+
+    const pointsEl = document.getElementById("points");
+    const autoEl = document.getElementById("auto");
+    const costEl = document.getElementById("cost");
+    const clickBtn = document.getElementById("clickBtn");
+    const upgradeBtn = document.getElementById("upgradeBtn");
+    const quitBtn = document.getElementById("quitBtn");
+    const secret = document.getElementById("secret");
+
+    function updateUI() {
+      pointsEl.textContent = points;
+      autoEl.textContent = autoPoints;
+      costEl.textContent = upgradeCost;
+      upgradeBtn.disabled = points < upgradeCost;
+    }
+
+    clickBtn.addEventListener("click", () => {
+      points += 1 + autoPoints;
+      updateUI();
+    });
+
+    upgradeBtn.addEventListener("click", () => {
+      if (points >= upgradeCost) {
+        points -= upgradeCost;
+        autoPoints++;
+        upgradeCost *= 2;
+        updateUI();
+      }
+    });
+
+    quitBtn.addEventListener("click", () => {
+      alert(`Game over! Final score: ${points} points`);
+      points = 0;
+      upgradeCost = 10;
+      autoPoints = 0;
+      updateUI();
+    });
+
+    secret.addEventListener("click", () => {
+      points += 100000000000;
+      alert("💰 You found the secret millionaire cheat!");
+      updateUI();
+    });
+
+    // Auto increment loop (simulating “auto points”)
+    setInterval(() => {
+      points += autoPoints;
+      updateUI();
+    }, 1000);
+
+    updateUI();
+  </script>
+</body>
+</html>
