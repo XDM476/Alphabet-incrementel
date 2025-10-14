@@ -25,6 +25,16 @@
       text-align: center;
     }
 
+    .tier-status {
+      font-size: 1.2em;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 12px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.05);
+    }
+
     .tier-list {
       width: 90%;
       max-width: 700px;
@@ -72,12 +82,17 @@
 <body>
   <h1>B-tier Progression Guide 💠</h1>
 
+  <!-- Dynamic Tier Display -->
+  <div class="tier-status" id="tierDisplay">
+    Loading your current tier...
+  </div>
+
   <div class="tier-list">
     <h2>📈 Core System</h2>
     <p>
-      The game now runs entirely on <strong>passive A gain</strong>.
+      The game runs entirely on <strong>passive A gain</strong>.
       You begin earning <strong>1 A per second</strong> automatically.
-      All upgrades now improve or multiply that passive gain.
+      All upgrades improve or multiply that passive gain.
     </p>
 
     <h2>⚙️ Upgrades Overview</h2>
@@ -104,12 +119,30 @@
     <h2>💡 Strategy Tips</h2>
     <ul>
       <li>Upgrade 1 is your long-term engine — stack it whenever possible.</li>
-      <li>Upgrade 3 is slow but permanently boosts future Upgrade 1 efficiency.</li>
+      <li>Upgrade 3 permanently boosts future Upgrade 1 efficiency.</li>
       <li>Reset often once you reach the B-tier threshold to accelerate growth.</li>
       <li>Upgrade 2 gives stability early, but Upgrade 1 + 3 combos scale exponentially later.</li>
     </ul>
   </div>
 
   <button class="back-btn" onclick="window.location.href='index.html'">⬅ Back to Game</button>
+
+  <script>
+    // Display current B-tier based on saved data
+    const tierDisplay = document.getElementById('tierDisplay');
+
+    function loadTier() {
+      const save = localStorage.getItem("miniGameSave");
+      if (save) {
+        const data = JSON.parse(save);
+        const tier = data.bTier ?? 0;
+        tierDisplay.innerHTML = `🌟 You are currently on <strong>B-tier ${tier}</strong>!`;
+      } else {
+        tierDisplay.innerHTML = `❌ No save data found. Start your journey in the main game!`;
+      }
+    }
+
+    loadTier();
+  </script>
 </body>
 </html>
