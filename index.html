@@ -16,25 +16,32 @@
     flex-direction: column;
     justify-content: center;
   }
+
   button {
     margin: 3px;
-    padding: 6px 12px;
-    border-radius: 8px;
+    padding: 4px 8px; /* smaller padding */
+    border-radius: 6px;
     border: none;
     background: #4caf50;
     color: #fff;
-    font-size: 0.9em;
+    font-size: 0.85em; /* slightly smaller text */
     cursor: pointer;
     transition: 0.15s;
+    min-width: 100px; /* keeps buttons compact */
   }
+
   button:hover { background: #45a049; }
   button:disabled { background: #777; cursor: not-allowed; }
+
   .hidden { display: none; }
+
   .stats p { margin: 5px; }
+
   .cost {
     font-size: 0.85em;
     color: #ccc;
   }
+
   .tab {
     position: fixed;
     top: 10%;
@@ -49,8 +56,14 @@
     z-index: 1000;
     text-align: left;
   }
+
   .tab h2 { text-align: center; color: #4caf50; }
-  .close-btn { background: #e74c3c; display: block; margin: 10px auto; }
+
+  .close-btn {
+    background: #e74c3c;
+    display: block;
+    margin: 10px auto;
+  }
 </style>
 </head>
 <body>
@@ -251,10 +264,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 </script>
 </body>
 </html>
-
-
-
-
 
 
 
