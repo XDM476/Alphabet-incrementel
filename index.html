@@ -17,19 +17,24 @@
     justify-content: center;
   }
   button {
-    margin: 5px;
-    padding: 10px 20px;
-    border-radius: 10px;
+    margin: 3px;
+    padding: 6px 12px;
+    border-radius: 8px;
     border: none;
     background: #4caf50;
     color: #fff;
-    font-size: 1em;
+    font-size: 0.9em;
     cursor: pointer;
+    transition: 0.15s;
   }
   button:hover { background: #45a049; }
   button:disabled { background: #777; cursor: not-allowed; }
   .hidden { display: none; }
   .stats p { margin: 5px; }
+  .cost {
+    font-size: 0.85em;
+    color: #ccc;
+  }
   .tab {
     position: fixed;
     top: 10%;
@@ -61,22 +66,26 @@
 
   <div id="upgrades">
     <div id="upgrade1Section" class="hidden">
-      <button id="upgrade1Btn">A-Upgrade 1 (×Passive Gain)</button>
-      <span id="cost1Display">Cost: 50</span>
+      <button id="upgrade1Btn">A-Upgrade 1</button>
+      <div class="cost">×Passive Gain — Cost: <span id="cost1Display">50</span></div>
     </div>
     <div id="upgrade2Section" class="hidden">
-      <button id="upgrade2Btn">A-Upgrade 2 (+10 Passive A/sec)</button>
-      <span id="cost2Display">Cost: 1500</span>
+      <button id="upgrade2Btn">A-Upgrade 2</button>
+      <div class="cost">+10 Passive A/sec — Cost: <span id="cost2Display">1500</span></div>
     </div>
     <div id="upgrade3Section" class="hidden">
-      <button id="upgrade3Btn">A-Upgrade 3 (+0.1 Base Mult)</button>
-      <span id="cost3Display">Cost: 10000</span>
+      <button id="upgrade3Btn">A-Upgrade 3</button>
+      <div class="cost">+0.1 Base Mult — Cost: <span id="cost3Display">10000</span></div>
     </div>
   </div>
 
   <br>
   <button id="aRankBtn">Rank Up (A-Rank)</button>
+  <div class="cost">Cost: <span id="aRankCostDisplay">10</span> A</div>
+
   <button id="bResetBtn" class="hidden">Reset for B-Tier</button>
+  <div class="cost hidden" id="bTierCostLine">Cost: <span id="bTierCostDisplay">500</span> A</div>
+
   <button id="cTabBtn" class="hidden">Open C-Points Tab</button>
 
   <br><br>
@@ -86,12 +95,13 @@
   <!-- 🌌 C-Points Tab -->
   <div id="cTab" class="tab">
     <h2>🌌 C-Points Prestige</h2>
-    <p>You will earn <strong>log₂(A / 10,000,000)</strong> C-Points and reset everything.</p>
-    <p><strong>Potential Gain:</strong> <span id="cPreview">0</span> C-Points if you reset now.</p>
-    <p>Current C-Points: <span id="cInfoPoints">0</span></p>
+    <p>Earn C-Points by reaching huge A values. Resets everything before it.</p>
+    <p><strong>Formula:</strong> ⌊log₂(A / 10,000,000)⌋</p>
+    <p><strong>Potential Gain:</strong> <span id="cPreview">0</span> C-Points</p>
+    <p><strong>Current:</strong> <span id="cInfoPoints">0</span> C-Points</p>
     <button id="cResetBtn">Reset for C-Points</button>
     <hr>
-    <h3>C-Boost Shop</h3>
+    <h3>C-Boosts</h3>
     <button id="buyC1">C-Boost 1 (+50% Passive) — Cost 5 C</button><br>
     <button id="buyC2">C-Boost 2 (+0.5 Base Mult) — Cost 10 C</button><br>
     <button id="buyC3">C-Boost 3 (×1.2 All Mults) — Cost 25 C</button><br>
@@ -108,40 +118,52 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   const E=id=>document.getElementById(id);
   const UI={
-    pts:E("points"),rate:E("passiveRate"),
-    aR:E("aRank"),bT:E("bTier"),cP:E("cPoints"),
-    u1s:E("upgrade1Section"),u2s:E("upgrade2Section"),u3s:E("upgrade3Section"),
-    cTab:E("cTab"),cBtn:E("cTabBtn"),cPts:E("cInfoPoints"),cPrev:E("cPreview")
+    pts:E("points"),rate:E("passiveRate"),aR:E("aRank"),
+    bT:E("bTier"),cP:E("cPoints"),cBtn:E("cTabBtn"),
+    u1:E("upgrade1Section"),u2:E("upgrade2Section"),u3:E("upgrade3Section"),
+    cPrev:E("cPreview"),cPts:E("cInfoPoints"),
+    aCost:E("aRankCostDisplay"),bCost:E("bTierCostDisplay"),bLine:E("bTierCostLine")
   };
 
+  // --- Helper ---
+  const aRankCost=()=>Math.floor(20*Math.pow(3.5,aRank));
+  const bTierCost=()=>Math.floor(1000*Math.pow(6,bTier));
+
+  // --- UI Update ---
   function updateUI(){
     UI.pts.textContent=Math.floor(points);
     UI.rate.textContent=(passiveGain+flatBonus).toFixed(2);
     UI.aR.textContent=aRank;UI.bT.textContent=bTier;
     UI.cP.textContent=cPoints.toFixed(2);
-    UI.u1s.classList.toggle("hidden",aRank<1);
-    UI.u2s.classList.toggle("hidden",bTier<2);
-    UI.u3s.classList.toggle("hidden",bTier<3);
+    E("cost1Display").textContent=Math.floor(upgrade1Cost);
+    E("cost2Display").textContent=Math.floor(upgrade2Cost);
+    E("cost3Display").textContent=Math.floor(upgrade3Cost);
+    UI.aCost.textContent=aRankCost().toLocaleString();
+    UI.bCost.textContent=bTierCost().toLocaleString();
+    UI.u1.classList.toggle("hidden",aRank<1);
+    UI.u2.classList.toggle("hidden",bTier<2);
+    UI.u3.classList.toggle("hidden",bTier<3);
+    E("bResetBtn").classList.toggle("hidden",aRank<5);
+    UI.bLine.classList.toggle("hidden",aRank<5);
     UI.cBtn.classList.toggle("hidden",bTier<10);
   }
 
-  function previewCPoints(){
-    const potential=Math.floor(Math.log2(points/1e7));
-    UI.cPrev.textContent=isFinite(potential)&&potential>0?potential:0;
-  }
-
-  // --- Rank / Tier ---
+  // --- A-Rank ---
   E("aRankBtn").onclick=()=>{
-    if(points>=10*Math.pow(2.5,aRank)){
+    const cost=aRankCost();
+    if(points>=cost){
       points=0;aRank++;
-      passiveGain*=1.45*(1+0.1*aRank);
+      passiveGain*=1.3*(1+0.05*aRank);
       updateUI();saveGame();
     }
   };
+
+  // --- B-Tier ---
   E("bResetBtn").onclick=()=>{
-    if(aRank>=5&&points>=500*Math.pow(6,bTier)){
+    const cost=bTierCost();
+    if(aRank>=5&&points>=cost){
       bTier++;aRank=0;points=0;flatBonus=0;
-      passiveGain=Math.pow(4,bTier);
+      passiveGain=Math.pow(3.5,bTier);
       if(bTier>=6)passiveGain*=2;
       updateUI();saveGame();
     }
@@ -152,42 +174,50 @@ document.addEventListener("DOMContentLoaded",()=>{
     if(points>=upgrade1Cost){
       points-=upgrade1Cost;
       passiveGain*=(baseMultiplier+0.05*aRank+0.1*bTier);
-      upgrade1Cost*=2+0.15*aRank;updateUI();saveGame();
+      upgrade1Cost*=2.2+0.15*aRank;
+      updateUI();saveGame();
     }
   };
   E("upgrade2Btn").onclick=()=>{
     if(points>=upgrade2Cost){
-      points-=upgrade2Cost;flatBonus+=10+bTier*5;
-      upgrade2Cost*=2.5;updateUI();saveGame();
+      points-=upgrade2Cost;
+      flatBonus+=10+bTier*4;
+      upgrade2Cost*=2.5;
+      updateUI();saveGame();
     }
   };
   E("upgrade3Btn").onclick=()=>{
     if(points>=upgrade3Cost){
-      points-=upgrade3Cost;baseMultiplier+=0.1;
-      upgrade3Cost*=3;updateUI();saveGame();
+      points-=upgrade3Cost;
+      baseMultiplier+=0.1;
+      upgrade3Cost*=3;
+      updateUI();saveGame();
     }
   };
 
-  // --- C-Points Prestige ---
+  // --- C-Points ---
+  function previewCPoints(){
+    const potential=Math.floor(Math.log2(points/1e8));
+    UI.cPrev.textContent=isFinite(potential)&&potential>0?potential:0;
+  }
   E("cTabBtn").onclick=()=>{
     UI.cPts.textContent=cPoints.toFixed(2);
     previewCPoints();
-    UI.cTab.style.display="block";
+    E("cTab").style.display="block";
   };
-  E("closeCTab").onclick=()=>UI.cTab.style.display="none";
+  E("closeCTab").onclick=()=>E("cTab").style.display="none";
 
   E("cResetBtn").onclick=()=>{
     if(bTier>=10){
-      let gain=Math.floor(Math.log2(points/1e7));
+      const gain=Math.floor(Math.log2(points/1e7));
       if(gain>0){
         cPoints+=gain;
-        // Hard reset
         points=0;passiveGain=1;flatBonus=0;
         aRank=0;bTier=0;
         upgrade1Cost=50;upgrade2Cost=1500;upgrade3Cost=10000;baseMultiplier=2;
         updateUI();saveGame();
         alert(`You gained ${gain} C-Points!`);
-      }else alert("Not enough A to gain C-Points!");
+      } else alert("Not enough A for C-Points!");
     }
   };
 
@@ -196,14 +226,13 @@ document.addEventListener("DOMContentLoaded",()=>{
   E("buyC2").onclick=()=>{if(cPoints>=10&&!cBoosts.b2){cPoints-=10;cBoosts.b2=true;baseMultiplier+=0.5;updateUI();saveGame();}};
   E("buyC3").onclick=()=>{if(cPoints>=25&&!cBoosts.b3){cPoints-=25;cBoosts.b3=true;passiveGain*=1.2;updateUI();saveGame();}};
 
-  // --- Passive Loop ---
+  // --- Passive loop ---
   setInterval(()=>{
     points+=passiveGain+flatBonus;
-    updateUI();
-    previewCPoints(); // live update of C preview
+    updateUI();previewCPoints();
   },1000);
 
-  // --- Save System ---
+  // --- Save ---
   function saveGame(){
     localStorage.setItem("alphabetSave",JSON.stringify({
       points,passiveGain,flatBonus,aRank,bTier,cPoints,
@@ -212,9 +241,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   }
   function loadGame(){
     const s=localStorage.getItem("alphabetSave");if(!s)return;
-    const d=JSON.parse(s);
-    Object.assign(window,d);
-    Object.assign(cBoosts,d.cBoosts||{});
+    const d=JSON.parse(s);Object.assign(window,d);
+    cBoosts=d.cBoosts||{b1:false,b2:false,b3:false};
   }
   E("saveBtn").onclick=saveGame;
   E("clearBtn").onclick=()=>{localStorage.removeItem("alphabetSave");location.reload();};
