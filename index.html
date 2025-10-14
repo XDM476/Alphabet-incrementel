@@ -42,6 +42,7 @@
     color: #ccc;
   }
 
+  /* Solid non-transparent tab */
   .tab {
     position: fixed;
     top: 10%;
@@ -49,12 +50,13 @@
     transform: translateX(-50%);
     width: 80%;
     max-width: 600px;
-    background: rgba(255,255,255,0.08);
+    background: #1e1e1e; /* solid dark */
     border-radius: 15px;
     padding: 20px;
     display: none;
     z-index: 1000;
     text-align: left;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7);
   }
 
   .tab h2 { text-align: center; color: #4caf50; }
@@ -63,6 +65,13 @@
     background: #e74c3c;
     display: block;
     margin: 10px auto;
+  }
+
+  .bonus-section {
+    margin: 15px 0;
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 8px;
   }
 </style>
 </head>
@@ -93,34 +102,41 @@
   </div>
 
   <br>
-  <button id="aRankTabBtn">A-Rank Tab</button>
-  <button id="bTierTabBtn" class="hidden">B-Tier Tab</button>
-  <button id="cTabBtn" class="hidden">C-Points Tab</button>
-  <br><br>
 
+  <!-- Main resets remain visible -->
+  <button id="aRankBtn">Rank Up (A-Rank)</button>
+  <div class="cost">Cost: <span id="aRankCostDisplay">10</span> A</div>
+
+  <button id="bResetBtn" class="hidden">Reset for B-Tier</button>
+  <div class="cost hidden" id="bTierCostLine">Cost: <span id="bTierCostDisplay">500</span> A</div>
+
+  <br><br>
+  <button id="rankTierTabBtn">Open Rank & Tier Tab</button>
+  <button id="cTabBtn" class="hidden">C-Points Tab</button>
+
+  <br><br>
   <button id="saveBtn">💾 Save</button>
   <button id="clearBtn">🗑️ Clear Save</button>
 
-  <!-- A-Rank Tab -->
-  <div id="aTab" class="tab">
-    <h2>🏅 A-Rank Prestige</h2>
-    <p>Reset A and Upgrades to rank up and increase passive multiplier.</p>
-    <p><strong>Current A-Rank:</strong> <span id="aRankInfo">0</span></p>
-    <p><strong>Next Bonus:</strong> ×<span id="aNextBonus">1.30</span> Passive Gain</p>
-    <p><strong>Cost:</strong> <span id="aRankCostDisplay">10</span> A</p>
-    <button id="aRankBtn">Rank Up</button>
-    <button id="closeATab" class="close-btn">Close</button>
-  </div>
+  <!-- Combined Rank & Tier Tab -->
+  <div id="rankTierTab" class="tab">
+    <h2>🏅 Rank & 💎 Tier Overview</h2>
 
-  <!-- B-Tier Tab -->
-  <div id="bTab" class="tab">
-    <h2>💎 B-Tier Prestige</h2>
-    <p>Reset A, Upgrades, and A-Rank to ascend to B-Tier for major boosts.</p>
-    <p><strong>Current B-Tier:</strong> <span id="bTierInfo">0</span></p>
-    <p><strong>Next Bonus:</strong> ×<span id="bNextBonus">3.50</span> Passive Mult</p>
-    <p><strong>Cost:</strong> <span id="bTierCostDisplay">500</span> A</p>
-    <button id="bResetBtn">Reset for B-Tier</button>
-    <button id="closeBTab" class="close-btn">Close</button>
+    <div class="bonus-section">
+      <h3>🏅 A-Rank Bonuses</h3>
+      <p>Current Rank: <span id="aRankInfo">0</span></p>
+      <p>Current Bonus: ×<span id="aRankBonus">1.00</span> Passive Gain</p>
+      <p>Next Bonus: ×<span id="aNextBonus">1.30</span> Passive Gain</p>
+    </div>
+
+    <div class="bonus-section">
+      <h3>💎 B-Tier Bonuses</h3>
+      <p>Current Tier: <span id="bTierInfo">0</span></p>
+      <p>Current Bonus: ×<span id="bTierBonus">1.00</span> Passive Gain</p>
+      <p>Next Bonus: ×<span id="bNextBonus">3.50</span> Passive Gain</p>
+    </div>
+
+    <button id="closeRankTierTab" class="close-btn">Close</button>
   </div>
 
   <!-- C-Points Tab -->
@@ -150,7 +166,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   const E=id=>document.getElementById(id);
   const UI={
     pts:E("points"),rate:E("passiveRate"),aR:E("aRank"),
-    bT:E("bTier"),cP:E("cPoints"),cBtn:E("cTabBtn"),
+    bT:E("bTier"),cP:E("cPoints"),
     aCost:E("aRankCostDisplay"),bCost:E("bTierCostDisplay")
   };
 
@@ -164,15 +180,25 @@ document.addEventListener("DOMContentLoaded",()=>{
     UI.cP.textContent=cPoints.toFixed(2);
     UI.aCost.textContent=aRankCost().toLocaleString();
     UI.bCost.textContent=bTierCost().toLocaleString();
+
+    E("bResetBtn").classList.toggle("hidden",aRank<5);
+    E("bTierCostLine").classList.toggle("hidden",aRank<5);
+    E("cTabBtn").classList.toggle("hidden",bTier<10);
+
+    // Rank/Tier Tab info
+    const aBonus = (1.3*(1+0.05*aRank)).toFixed(2);
+    const aNext = (1.3*(1+0.05*(aRank+1))).toFixed(2);
+    const bBonus = (Math.pow(3.5,bTier)).toFixed(2);
+    const bNext = (Math.pow(3.5,(bTier+1))).toFixed(2);
     E("aRankInfo").textContent=aRank;
+    E("aRankBonus").textContent=aBonus;
+    E("aNextBonus").textContent=aNext;
     E("bTierInfo").textContent=bTier;
-    E("aNextBonus").textContent=(1.3*(1+0.05*(aRank+1))).toFixed(2);
-    E("bNextBonus").textContent=(3.5*(1+0.1*(bTier+1))).toFixed(2);
-    E("bTierTabBtn").classList.toggle("hidden",aRank<5);
-    UI.cBtn.classList.toggle("hidden",bTier<10);
+    E("bTierBonus").textContent=bBonus;
+    E("bNextBonus").textContent=bNext;
   }
 
-  // A-Rank Reset (resets A + upgrades)
+  // A-Rank reset (resets A + upgrades)
   E("aRankBtn").onclick=()=>{
     const cost=aRankCost();
     if(points>=cost){
@@ -185,25 +211,28 @@ document.addEventListener("DOMContentLoaded",()=>{
     }
   };
 
-  // B-Tier Reset (resets A, upgrades, and A-Rank)
+  // B-Tier reset (resets A, upgrades, A-Rank)
   E("bResetBtn").onclick=()=>{
     const cost=bTierCost();
     if(aRank>=5 && points>=cost){
       points=0;flatBonus=0;passiveGain=1;
       upgrade1Cost=50;upgrade2Cost=1500;upgrade3Cost=10000;baseMultiplier=2;
-      aRank=0;
-      bTier++;
+      aRank=0;bTier++;
       passiveGain=Math.pow(3.5,bTier);
       if(bTier>=6)passiveGain*=2;
       updateUI();saveGame();
     }
   };
 
-  // Tabs
-  E("aRankTabBtn").onclick=()=>E("aTab").style.display="block";
-  E("closeATab").onclick=()=>E("aTab").style.display="none";
-  E("bTierTabBtn").onclick=()=>E("bTab").style.display="block";
-  E("closeBTab").onclick=()=>E("bTab").style.display="none";
+  // Combined tab
+  E("rankTierTabBtn").onclick=()=>E("rankTierTab").style.display="block";
+  E("closeRankTierTab").onclick=()=>E("rankTierTab").style.display="none";
+
+  // C-Tab
+  function previewCPoints(){
+    const potential=Math.floor(Math.log2(points/1e8));
+    E("cPreview").textContent=isFinite(potential)&&potential>0?potential:0;
+  }
   E("cTabBtn").onclick=()=>{
     E("cInfoPoints").textContent=cPoints.toFixed(2);
     previewCPoints();
@@ -216,11 +245,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   E("upgrade2Btn").onclick=()=>{if(points>=upgrade2Cost){points-=upgrade2Cost;flatBonus+=10+bTier*4;upgrade2Cost*=2.5;updateUI();saveGame();}};
   E("upgrade3Btn").onclick=()=>{if(points>=upgrade3Cost){points-=upgrade3Cost;baseMultiplier+=0.1;upgrade3Cost*=3;updateUI();saveGame();}};
 
-  // C-Points
-  function previewCPoints(){
-    const potential=Math.floor(Math.log2(points/1e8));
-    E("cPreview").textContent=isFinite(potential)&&potential>0?potential:0;
-  }
+  // C-Points reset
   E("cResetBtn").onclick=()=>{
     if(bTier>=10){
       const gain=Math.floor(Math.log2(points/1e7));
@@ -239,10 +264,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   E("buyC2").onclick=()=>{if(cPoints>=10&&!cBoosts.b2){cPoints-=10;cBoosts.b2=true;baseMultiplier+=0.5;updateUI();saveGame();}};
   E("buyC3").onclick=()=>{if(cPoints>=25&&!cBoosts.b3){cPoints-=25;cBoosts.b3=true;passiveGain*=1.2;updateUI();saveGame();}};
 
-  // Passive gain loop
+  // Passive loop
   setInterval(()=>{points+=passiveGain+flatBonus;updateUI();previewCPoints();},1000);
 
-  // Save/Load
+  // Save system
   function saveGame(){
     localStorage.setItem("alphabetSave",JSON.stringify({
       points,passiveGain,flatBonus,aRank,bTier,cPoints,
