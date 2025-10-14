@@ -6,22 +6,46 @@
 <title>Alphabet Incremental 🔠</title>
 <style>
   body {
-    font-family:"Poppins",sans-serif;
-    background:radial-gradient(circle at top,#202020,#0a0a0a);
-    color:#f5f5f5;text-align:center;height:100vh;margin:0;
-    display:flex;flex-direction:column;justify-content:center;
+    font-family: "Poppins", sans-serif;
+    background: radial-gradient(circle at top, #202020, #0a0a0a);
+    color: #f5f5f5;
+    text-align: center;
+    height: 100vh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
-  button{margin:5px;padding:10px 20px;border-radius:10px;border:none;
-    background:#4caf50;color:#fff;font-size:1em;cursor:pointer;}
-  button:hover{background:#45a049;}button:disabled{background:#777;cursor:not-allowed;}
-  .hidden{display:none;}.stats p{margin:5px;}
-  .tab{
-    position:fixed;top:10%;left:50%;transform:translateX(-50%);
-    width:80%;max-width:600px;background:rgba(255,255,255,0.08);
-    border-radius:15px;padding:20px;display:none;z-index:1000;text-align:left;
+  button {
+    margin: 5px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    background: #4caf50;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
   }
-  .tab h2{text-align:center;color:#4caf50;}
-  .close-btn{background:#e74c3c;display:block;margin:10px auto;}
+  button:hover { background: #45a049; }
+  button:disabled { background: #777; cursor: not-allowed; }
+  .hidden { display: none; }
+  .stats p { margin: 5px; }
+  .tab {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 600px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 15px;
+    padding: 20px;
+    display: none;
+    z-index: 1000;
+    text-align: left;
+  }
+  .tab h2 { text-align: center; color: #4caf50; }
+  .close-btn { background: #e74c3c; display: block; margin: 10px auto; }
 </style>
 </head>
 <body>
@@ -84,10 +108,9 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   const E=id=>document.getElementById(id);
   const UI={
-    pts:E("points"),rate:E("passiveRate"),aR:E("aRank"),
-    bT:E("bTier"),cP:E("cPoints"),
+    pts:E("points"),rate:E("passiveRate"),
+    aR:E("aRank"),bT:E("bTier"),cP:E("cPoints"),
     u1s:E("upgrade1Section"),u2s:E("upgrade2Section"),u3s:E("upgrade3Section"),
-    u1b:E("upgrade1Btn"),u2b:E("upgrade2Btn"),u3b:E("upgrade3Btn"),
     cTab:E("cTab"),cBtn:E("cTabBtn"),cPts:E("cInfoPoints"),cPrev:E("cPreview")
   };
 
@@ -158,6 +181,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       let gain=Math.floor(Math.log2(points/1e7));
       if(gain>0){
         cPoints+=gain;
+        // Hard reset
         points=0;passiveGain=1;flatBonus=0;
         aRank=0;bTier=0;
         upgrade1Cost=50;upgrade2Cost=1500;upgrade3Cost=10000;baseMultiplier=2;
@@ -176,9 +200,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   setInterval(()=>{
     points+=passiveGain+flatBonus;
     updateUI();
-    previewCPoints(); // live update
+    previewCPoints(); // live update of C preview
   },1000);
 
+  // --- Save System ---
   function saveGame(){
     localStorage.setItem("alphabetSave",JSON.stringify({
       points,passiveGain,flatBonus,aRank,bTier,cPoints,
@@ -188,7 +213,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   function loadGame(){
     const s=localStorage.getItem("alphabetSave");if(!s)return;
     const d=JSON.parse(s);
-    Object.assign(window,d);Object.assign(cBoosts,d.cBoosts||{});
+    Object.assign(window,d);
+    Object.assign(cBoosts,d.cBoosts||{});
   }
   E("saveBtn").onclick=saveGame;
   E("clearBtn").onclick=()=>{localStorage.removeItem("alphabetSave");location.reload();};
@@ -197,6 +223,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 </script>
 </body>
 </html>
+
 
 
 
