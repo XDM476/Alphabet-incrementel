@@ -1,189 +1,304 @@
-<script>
-  // --- Core game variables ---
-  let points = 0;
-  let passiveGain = 1;
-  let flatBonus = 0;
-  let bTier = 0;
-  let nextBThreshold = 500;
-
-  let upgrade1Cost = 50;
-  let upgrade2Cost = 1500;
-  let upgrade3Cost = 10000;
-  let upgrade3Count = 0;
-  let baseMultiplier = 2.0;
-
-  // DOM elements
-  const pointsEl = document.getElementById("points");
-  const passiveRateEl = document.getElementById("passiveRate");
-  const baseMultEl = document.getElementById("baseMult");
-  const bTierEl = document.getElementById("bTier");
-  const bNextEl = document.getElementById("bNext");
-
-  const upgrade1Btn = document.getElementById("upgrade1Btn");
-  const upgrade2Btn = document.getElementById("upgrade2Btn");
-  const upgrade3Btn = document.getElementById("upgrade3Btn");
-  const bResetBtn = document.getElementById("bResetBtn");
-  const quitBtn = document.getElementById("quitBtn");
-  const bInfoBtn = document.getElementById("bInfoBtn");
-  const saveBtn = document.getElementById("saveBtn");
-  const clearBtn = document.getElementById("clearBtn");
-
-  const cost1Display = document.getElementById("cost1Display");
-  const cost2Display = document.getElementById("cost2Display");
-  const cost3Display = document.getElementById("cost3Display");
-  const upgrade1Section = document.getElementById("upgrade1Section");
-  const upgrade2Section = document.getElementById("upgrade2Section");
-  const upgrade3Section = document.getElementById("upgrade3Section");
-
-  // --- UI Update ---
-  function updateUI() {
-    pointsEl.textContent = Math.floor(points);
-    passiveRateEl.textContent = (passiveGain + flatBonus).toFixed(2);
-    baseMultEl.textContent = baseMultiplier.toFixed(1);
-    bTierEl.textContent = bTier;
-    bNextEl.textContent = nextBThreshold.toLocaleString();
-
-    if (bTier >= 0) upgrade1Section.classList.remove("hidden");
-    if (bTier >= 2) {
-      upgrade2Section.classList.remove("hidden");
-      cost2Display.textContent = `Cost: ${upgrade2Cost}`;
-    } else upgrade2Section.classList.add("hidden");
-    if (bTier >= 3) {
-      upgrade3Section.classList.remove("hidden");
-      cost3Display.textContent = `Cost: ${upgrade3Cost}`;
-    } else upgrade3Section.classList.add("hidden");
-
-    cost1Display.textContent = `Cost: ${upgrade1Cost}`;
-    upgrade1Btn.disabled = points < upgrade1Cost;
-    upgrade2Btn.disabled = points < upgrade2Cost;
-    upgrade3Btn.disabled = points < upgrade3Cost;
-    bResetBtn.disabled = points < nextBThreshold;
-  }
-
-  // --- Save System ---
-  function saveGame() {
-    const data = {
-      points,
-      passiveGain,
-      flatBonus,
-      bTier,
-      nextBThreshold,
-      upgrade1Cost,
-      upgrade2Cost,
-      upgrade3Cost,
-      upgrade3Count,
-      baseMultiplier
-    };
-    localStorage.setItem("miniGameSave", JSON.stringify(data));
-    console.log("💾 Game saved:", data);
-  }
-
-  function loadGame() {
-    const save = localStorage.getItem("miniGameSave");
-    if (!save) return;
-    const data = JSON.parse(save);
-    Object.assign(window, data);
-    console.log("✅ Game loaded:", data);
-  }
-
-  function clearSave() {
-    localStorage.removeItem("miniGameSave");
-    console.log("🗑️ Save cleared!");
-  }
-
-  // --- Upgrades ---
-  upgrade1Btn.addEventListener("click", () => {
-    if (points >= upgrade1Cost) {
-      points -= upgrade1Cost;
-      passiveGain *= baseMultiplier;
-      upgrade1Cost = Math.floor(upgrade1Cost * (2 + 0.2 * bTier));
-      updateUI();
-      saveGame();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Incremental Game 💎</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at top, #282c34, #1b1b1b);
+      color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
     }
-  });
 
-  upgrade2Btn.addEventListener("click", () => {
-    if (points >= upgrade2Cost && bTier >= 2) {
-      points -= upgrade2Cost;
-      flatBonus += 10 + bTier * 5;
-      upgrade2Cost = Math.floor(upgrade2Cost * (2.5 + 0.25 * bTier));
-      updateUI();
-      saveGame();
+    h1 {
+      font-size: 2em;
+      margin-bottom: 0.5em;
     }
-  });
 
-  upgrade3Btn.addEventListener("click", () => {
-    if (points >= upgrade3Cost && bTier >= 3) {
-      points -= upgrade3Cost;
-      upgrade3Count++;
-      baseMultiplier += 0.1;
-      upgrade3Cost = Math.floor(upgrade3Cost * (3 + 0.3 * bTier));
-      updateUI();
-      saveGame();
+    .stats {
+      margin: 1em 0;
+      font-size: 1.2em;
     }
-  });
 
-  // --- B-tier Reset ---
-  bResetBtn.addEventListener("click", () => {
-    if (points >= nextBThreshold) {
-      bTier++;
-      points = 0;
-      passiveGain = Math.pow(2.5, bTier);
-      flatBonus = 0;
-      baseMultiplier = 2.0 + 0.1 * upgrade3Count;
-      upgrade1Cost = 50;
-      upgrade2Cost = 1500;
-      upgrade3Cost = 10000;
-      nextBThreshold = Math.floor(500 * Math.pow(4.5, bTier));
-      updateUI();
-      saveGame();
-      alert(`🎉 B-tier reset complete! You’re now Tier ${bTier}`);
+    button {
+      background: #4caf50;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 5px;
     }
-  });
 
-  // --- Buttons ---
-  quitBtn.addEventListener("click", () => {
-    alert(`Game over! Final A: ${points}, B-tier resets: ${bTier}`);
-    clearSave();
-    resetGame();
-  });
+    button:hover {
+      background: #45a049;
+      transform: scale(1.05);
+    }
 
-  bInfoBtn.addEventListener("click", () => {
-    saveGame(); // 🔥 ensures latest data is stored before redirect
-    window.location.href = "btier.html";
-  });
+    button:disabled {
+      background: #777;
+      cursor: not-allowed;
+      transform: none;
+    }
 
-  saveBtn?.addEventListener("click", saveGame);
-  clearBtn?.addEventListener("click", clearSave);
+    .hidden {
+      display: none;
+    }
 
-  function resetGame() {
-    points = 0;
-    passiveGain = 1;
-    flatBonus = 0;
-    bTier = 0;
-    upgrade3Count = 0;
-    baseMultiplier = 2.0;
-    nextBThreshold = 500;
-    upgrade1Cost = 50;
-    upgrade2Cost = 1500;
-    upgrade3Cost = 10000;
-    updateUI();
-    saveGame();
-  }
+    .upgrade-section {
+      margin-top: 10px;
+    }
 
-  // --- Passive loop ---
-  setInterval(() => {
-    points += (passiveGain + flatBonus);
-    updateUI();
-  }, 1000);
+    .small {
+      font-size: 0.9em;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini Incremental Game 💎</h1>
 
-  // --- Auto-save ---
-  setInterval(saveGame, 5000);
+  <div class="stats">
+    <p>A: <span id="points">0</span></p>
+    <p>Passive A/sec: <span id="passiveRate">1</span></p>
+    <p>Upgrade 1 Base Multiplier: <span id="baseMult">2.0</span>x</p>
+    <p>B-tier Resets: <span id="bTier">0</span></p>
+    <p>Next B-tier at: <span id="bNext">500</span></p>
+  </div>
 
-  // --- Init ---
-  loadGame();
-  updateUI();
-</script>
+  <div class="upgrade-section">
+    <div id="upgrade1Section">
+      <button id="upgrade1Btn">Upgrade 1 (×Passive Gain)</button>
+      <span id="cost1Display">Cost: 50</span>
+    </div>
+
+    <div id="upgrade2Section" class="hidden">
+      <button id="upgrade2Btn">Upgrade 2 (+10 Passive A/sec)</button>
+      <span id="cost2Display"></span>
+    </div>
+
+    <div id="upgrade3Section" class="hidden">
+      <button id="upgrade3Btn">Upgrade 3 (+0.1 to Upgrade 1 Base)</button>
+      <span id="cost3Display"></span>
+    </div>
+  </div>
+
+  <button id="bResetBtn">Reset for B-tier</button>
+  <button id="bInfoBtn">View B-tier Info</button>
+  <br>
+  <button id="saveBtn">💾 Save Game</button>
+  <button id="clearBtn">🗑️ Clear Save</button>
+  <button id="quitBtn">Quit Game</button>
+
+  <p class="small">Progress auto-saves every 5 seconds.</p>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // --- Core game variables ---
+      let points = 0;
+      let passiveGain = 1;
+      let flatBonus = 0;
+      let bTier = 0;
+      let nextBThreshold = 500;
+
+      let upgrade1Cost = 50;
+      let upgrade2Cost = 1500;
+      let upgrade3Cost = 10000;
+      let upgrade3Count = 0;
+      let baseMultiplier = 2.0;
+
+      // --- DOM Elements ---
+      const pointsEl = document.getElementById("points");
+      const passiveRateEl = document.getElementById("passiveRate");
+      const baseMultEl = document.getElementById("baseMult");
+      const bTierEl = document.getElementById("bTier");
+      const bNextEl = document.getElementById("bNext");
+
+      const upgrade1Btn = document.getElementById("upgrade1Btn");
+      const upgrade2Btn = document.getElementById("upgrade2Btn");
+      const upgrade3Btn = document.getElementById("upgrade3Btn");
+      const bResetBtn = document.getElementById("bResetBtn");
+      const quitBtn = document.getElementById("quitBtn");
+      const bInfoBtn = document.getElementById("bInfoBtn");
+      const saveBtn = document.getElementById("saveBtn");
+      const clearBtn = document.getElementById("clearBtn");
+
+      const cost1Display = document.getElementById("cost1Display");
+      const cost2Display = document.getElementById("cost2Display");
+      const cost3Display = document.getElementById("cost3Display");
+
+      const upgrade1Section = document.getElementById("upgrade1Section");
+      const upgrade2Section = document.getElementById("upgrade2Section");
+      const upgrade3Section = document.getElementById("upgrade3Section");
+
+      // --- UI Update ---
+      function updateUI() {
+        if (!pointsEl) return; // prevent crash
+        pointsEl.textContent = Math.floor(points);
+        passiveRateEl.textContent = (passiveGain + flatBonus).toFixed(2);
+        baseMultEl.textContent = baseMultiplier.toFixed(1);
+        bTierEl.textContent = bTier;
+        bNextEl.textContent = nextBThreshold.toLocaleString();
+
+        if (bTier >= 0) upgrade1Section.classList.remove("hidden");
+        if (bTier >= 2) {
+          upgrade2Section.classList.remove("hidden");
+          cost2Display.textContent = `Cost: ${upgrade2Cost}`;
+        } else upgrade2Section.classList.add("hidden");
+        if (bTier >= 3) {
+          upgrade3Section.classList.remove("hidden");
+          cost3Display.textContent = `Cost: ${upgrade3Cost}`;
+        } else upgrade3Section.classList.add("hidden");
+
+        cost1Display.textContent = `Cost: ${upgrade1Cost}`;
+        upgrade1Btn.disabled = points < upgrade1Cost;
+        upgrade2Btn.disabled = points < upgrade2Cost;
+        upgrade3Btn.disabled = points < upgrade3Cost;
+        bResetBtn.disabled = points < nextBThreshold;
+      }
+
+      // --- Save System ---
+      function saveGame() {
+        const data = {
+          points,
+          passiveGain,
+          flatBonus,
+          bTier,
+          nextBThreshold,
+          upgrade1Cost,
+          upgrade2Cost,
+          upgrade3Cost,
+          upgrade3Count,
+          baseMultiplier,
+        };
+        localStorage.setItem("miniGameSave", JSON.stringify(data));
+        console.log("💾 Game saved:", data);
+      }
+
+      function loadGame() {
+        const save = localStorage.getItem("miniGameSave");
+        if (!save) return;
+        const data = JSON.parse(save);
+        points = data.points ?? 0;
+        passiveGain = data.passiveGain ?? 1;
+        flatBonus = data.flatBonus ?? 0;
+        bTier = data.bTier ?? 0;
+        nextBThreshold = data.nextBThreshold ?? 500;
+        upgrade1Cost = data.upgrade1Cost ?? 50;
+        upgrade2Cost = data.upgrade2Cost ?? 1500;
+        upgrade3Cost = data.upgrade3Cost ?? 10000;
+        upgrade3Count = data.upgrade3Count ?? 0;
+        baseMultiplier = data.baseMultiplier ?? 2.0;
+        console.log("✅ Game loaded:", data);
+      }
+
+      function clearSave() {
+        localStorage.removeItem("miniGameSave");
+        console.log("🗑️ Save cleared!");
+      }
+
+      // --- Logic: Upgrades ---
+      upgrade1Btn.addEventListener("click", () => {
+        if (points >= upgrade1Cost) {
+          points -= upgrade1Cost;
+          passiveGain *= baseMultiplier;
+          upgrade1Cost = Math.floor(upgrade1Cost * (2 + 0.2 * bTier));
+          updateUI();
+          saveGame();
+        }
+      });
+
+      upgrade2Btn.addEventListener("click", () => {
+        if (points >= upgrade2Cost && bTier >= 2) {
+          points -= upgrade2Cost;
+          flatBonus += 10 + bTier * 5;
+          upgrade2Cost = Math.floor(upgrade2Cost * (2.5 + 0.25 * bTier));
+          updateUI();
+          saveGame();
+        }
+      });
+
+      upgrade3Btn.addEventListener("click", () => {
+        if (points >= upgrade3Cost && bTier >= 3) {
+          points -= upgrade3Cost;
+          upgrade3Count++;
+          baseMultiplier += 0.1;
+          upgrade3Cost = Math.floor(upgrade3Cost * (3 + 0.3 * bTier));
+          updateUI();
+          saveGame();
+        }
+      });
+
+      // --- B-tier Reset ---
+      bResetBtn.addEventListener("click", () => {
+        if (points >= nextBThreshold) {
+          bTier++;
+          points = 0;
+          passiveGain = Math.pow(2.5, bTier);
+          flatBonus = 0;
+          baseMultiplier = 2.0 + 0.1 * upgrade3Count;
+          upgrade1Cost = 50;
+          upgrade2Cost = 1500;
+          upgrade3Cost = 10000;
+          nextBThreshold = Math.floor(500 * Math.pow(4.5, bTier));
+          updateUI();
+          saveGame();
+          alert(`🎉 B-tier reset complete! You’re now Tier ${bTier}`);
+        }
+      });
+
+      // --- Buttons ---
+      quitBtn.addEventListener("click", () => {
+        alert(`Game over! Final A: ${points}, B-tier resets: ${bTier}`);
+        clearSave();
+        points = 0;
+        passiveGain = 1;
+        flatBonus = 0;
+        bTier = 0;
+        upgrade3Count = 0;
+        baseMultiplier = 2.0;
+        nextBThreshold = 500;
+        upgrade1Cost = 50;
+        upgrade2Cost = 1500;
+        upgrade3Cost = 10000;
+        updateUI();
+      });
+
+      bInfoBtn.addEventListener("click", () => {
+        saveGame(); // save before navigating
+        window.location.href = "btier.html";
+      });
+
+      saveBtn.addEventListener("click", saveGame);
+      clearBtn.addEventListener("click", clearSave);
+
+      // --- Passive Loop ---
+      setInterval(() => {
+        points += (passiveGain + flatBonus);
+        updateUI();
+      }, 1000);
+
+      // --- Auto-save every 5s ---
+      setInterval(saveGame, 5000);
+
+      // --- Initialize ---
+      loadGame();
+      updateUI();
+    });
+  </script>
+</body>
+</html>
+
 
 
 
